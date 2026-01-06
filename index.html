@@ -110,11 +110,13 @@ function updateQRStatus(){
 function updateSpecialFields(){
     specialFieldsDiv.innerHTML = '';
     const purposes = Array.from(document.querySelectorAll('input[name="purpose"]:checked')).map(c=>c.value);
-    if(purposes.includes('Conversion')){
+    // Conversion i Card replacement -> old/new version
+    if(purposes.includes('Conversion') || purposes.includes('Card replacement')){
         let oldV = document.createElement('input'); oldV.type='text'; oldV.id='oldVersion'; oldV.placeholder='Old Version';
         let newV = document.createElement('input'); newV.type='text'; newV.id='newVersion'; newV.placeholder='New Version';
         specialFieldsDiv.appendChild(oldV); specialFieldsDiv.appendChild(newV);
     }
+    // Exciter replacement -> old/new exciter
     if(purposes.includes('Exciter replacement')){
         let oldEx = document.createElement('input'); oldEx.type='text'; oldEx.id='oldEx'; oldEx.placeholder='Old Ex';
         let newEx = document.createElement('input'); newEx.type='text'; newEx.id='newEx'; newEx.placeholder='New Ex';
