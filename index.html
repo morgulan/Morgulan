@@ -19,22 +19,52 @@ label { display: block; margin-top: 10px; }
 input[type=text], select, textarea { width: 100%; padding: 8px; margin-top:5px; border-radius: 6px; border: 1px solid #555; background:#333; color:#fff; }
 .checkbox-group, .radio-group { display:flex; gap: 10px; margin-top:5px; flex-wrap: wrap; align-items:center; }
 .checkbox-group label, .radio-group label { display:flex; align-items:center; gap:5px; }
-button { padding: 10px 15px; border:none; border-radius: 8px; background:#007BFF; color:#fff; font-size:16px; cursor:pointer; margin-top:10px; width:100%; }
+button { padding: 10px 15px; border:none; border-radius: 8px; background:#007BFF; color:#fff; font-size:16px; cursor:pointer; width:100%; margin-top:10px;}
 button:disabled { background:#555; cursor:not-allowed;}
 #qr-reader { width:100%; margin-top:10px; display:none; }
-.created-by, .version-footer { text-align:center; font-size:12px; color:#aaa; }
+.created-by, .version-footer { text-align:center; font-size:12px; color:#aaa; margin-top:5px;}
 .code-item { background:#222; border-radius:8px; padding:10px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap;}
 .code-details { flex:1;}
 .code-remove { cursor:pointer; color:red; font-weight:bold; margin-left:10px; }
 .code-qr { font-family: monospace; font-size:12px; color:#0f0; margin-top:5px; word-break:break-all;}
 .purpose-special { margin-top:5px; display:flex; gap:5px; flex-wrap:wrap;}
 input.success { border-color:#0f0; }
+
+.contact-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.contact-buttons button {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px;
+    border: none;
+    border-radius: 8px;
+    color: #fff;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.btn-icon {
+    width: 20px;
+    height: 20px;
+}
+
+.viber-btn { background-color: #665CAC; } /* Viber ljubičasta */
+.whatsapp-btn { background-color: #25D366; } /* WhatsApp zelena */
+
 </style>
 </head>
 <body>
 <div class="container">
     <div class="created-by">Created by M.Orgulan</div>
     <h1>Auth Code Generator</h1>
+
 <div class="card">
     <label>Serijski broj:</label>
     <input type="text" id="serialNumber">
@@ -68,12 +98,23 @@ input.success { border-color:#0f0; }
 <div id="codeList"></div>
 
 <h3>Generirana poruka:</h3>
-<textarea id="messageBox" readonly rows="10" style="background:#333;color:#0f0;">
-Hello dear,
+<textarea id="messageBox" readonly rows="10" style="background:#333;color:#0f0;">Hello dear,
 I need auth codes for the following machines:
 
 </textarea>
 <button id="copyMessage">Copy Message</button>
+
+<!-- Novi gumbi za kontakt -->
+<div class="contact-buttons">
+    <button id="openViber" class="viber-btn">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/5/5b/Viber_logo.svg" alt="Viber" class="btn-icon">
+        Viber
+    </button>
+    <button id="openWhatsapp" class="whatsapp-btn">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp" class="btn-icon">
+        WhatsApp
+    </button>
+</div>
 
 <div class="version-footer">Version 7.1.26</div>
 </div>
@@ -172,7 +213,6 @@ scanQRBtn.addEventListener('click',()=>{
             let purposes = Array.from(document.querySelectorAll('input[name="purpose"]:checked')).map(c=>c.value).join(' + ');
             if(serial && codeType && purposes && qrData){
                 addEntry(serial, codeType, purposes, qrData);
-                // Zvučni signal
                 let beep = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg'); beep.play();
                 serialInput.value=''; document.querySelectorAll('input[name="codeType"]').forEach(r=>r.checked=false);
                 document.querySelectorAll('input[name="purpose"]').forEach(c=>c.checked=false);
@@ -197,13 +237,25 @@ manualQR.addEventListener('input',()=>{
     }
 });
 
-// Copy message button
-document.getElementById('copyMessage').addEventListener('click', () => {
+// Copy button
+document.getElementById('copyMessage').addEventListener('click', ()=>{
     messageBox.select();
-    navigator.clipboard.writeText(messageBox.value)
-        .then(() => alert('Message copied to clipboard!'))
-        .catch(err => alert('Failed to copy message: ' + err));
+    navigator.clipboard.writeText(messageBox.value);
+    alert('Message copied to clipboard!');
 });
+
+// Viber & WhatsApp buttons
+const viberNumber = '+38761234567';
+const whatsappNumber = '+38761234567';
+
+document.getElementById('openViber').addEventListener('click', () => {
+    window.open(`viber://chat?number=${viberNumber}`, '_blank');
+});
+
+document.getElementById('openWhatsapp').addEventListener('click', () => {
+    window.open(`https://wa.me/${whatsappNumber.replace(/\+/g,'')}`, '_blank');
+});
+
 </script>
 </body>
 </html>
