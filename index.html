@@ -16,10 +16,10 @@ body { font-family: Arial, sans-serif; background: #000; color:#fff; margin:0; p
 h1 { text-align:center; margin-bottom:10px;}
 .card { background: #111; padding: 15px; margin-bottom: 15px; border-radius: 12px; box-shadow: 0 2px 6px rgba(255,255,255,0.1);}
 label { display: block; margin-top: 10px; }
-input[type=text], select, textarea { width: 100%; padding: 8px; margin-top:5px; border-radius: 6px; border: 1px solid #555; background:#333; color:#fff; }
+input[type=text], textarea { width: 100%; padding: 8px; margin-top:5px; border-radius: 6px; border: 1px solid #555; background:#333; color:#fff; }
 .checkbox-group, .radio-group { display:flex; gap: 10px; margin-top:5px; flex-wrap: wrap; align-items:center; }
 .checkbox-group label, .radio-group label { display:flex; align-items:center; gap:5px; }
-button { padding: 10px 15px; border:none; border-radius: 8px; background:#007BFF; color:#fff; font-size:16px; cursor:pointer; width:100%; margin-top:10px;}
+button { padding: 10px 15px; border:none; border-radius: 8px; font-size:16px; cursor:pointer; margin-top:10px; width:100%; }
 button:disabled { background:#555; cursor:not-allowed;}
 #qr-reader { width:100%; margin-top:10px; display:none; }
 .created-by, .version-footer { text-align:center; font-size:12px; color:#aaa; margin-top:5px;}
@@ -30,34 +30,14 @@ button:disabled { background:#555; cursor:not-allowed;}
 .purpose-special { margin-top:5px; display:flex; gap:5px; flex-wrap:wrap;}
 input.success { border-color:#0f0; }
 
-.contact-buttons {
-    display: flex;
-    gap: 10px;
-    margin-top: 10px;
-}
+/* Gumbi za kontakte */
+.contact-buttons { display:flex; gap:10px; flex-wrap:wrap; margin-top:15px; }
+.contact-buttons button { flex:1; display:flex; align-items:center; justify-content:center; gap:5px; color:#fff; font-weight:bold; }
+.btn-icon { width:20px; height:20px; }
 
-.contact-buttons button {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 10px;
-    border: none;
-    border-radius: 8px;
-    color: #fff;
-    font-size: 16px;
-    cursor: pointer;
-}
-
-.btn-icon {
-    width: 20px;
-    height: 20px;
-}
-
-.viber-btn { background-color: #665CAC; } /* Viber ljubičasta */
-.whatsapp-btn { background-color: #25D366; } /* WhatsApp zelena */
-
+.viber-btn { background:#665CAC; }
+.whatsapp-btn { background:#25D366; }
+.teams-btn { background:#6264A7; }
 </style>
 </head>
 <body>
@@ -104,15 +84,19 @@ I need auth codes for the following machines:
 </textarea>
 <button id="copyMessage">Copy Message</button>
 
-<!-- Novi gumbi za kontakt -->
+<!-- Gumbi za kontakt -->
 <div class="contact-buttons">
     <button id="openViber" class="viber-btn">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/5/5b/Viber_logo.svg" alt="Viber" class="btn-icon">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/2/2d/Viber_logo_icon.svg" alt="Viber" class="btn-icon">
         Viber
     </button>
     <button id="openWhatsapp" class="whatsapp-btn">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp" class="btn-icon">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/3/3b/WhatsApp_icon.svg" alt="WhatsApp" class="btn-icon">
         WhatsApp
+    </button>
+    <button id="openTeams" class="teams-btn">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/4/44/Microsoft_Office_Teams_%282019%E2%80%93present%29.svg" alt="Teams" class="btn-icon">
+        Teams
     </button>
 </div>
 
@@ -189,10 +173,7 @@ function addEntry(serial, codeType, purposes, qr){
 
 // Refresh poruke
 function refreshMessageBox(){
-    messageBox.value = `Hello dear,
-I need auth codes for the following machines:
-
-`;
+    messageBox.value = 'Hello dear,\nI need auth codes for the following machines:\n\n';
     codeEntries.forEach(e=>{
         messageBox.value += `SN: ${e.serial}\nCode type: ${e.codeType}\nPurpose: ${e.purposes}\n`+
             (e.oldVersion||e.newVersion?`Old version: ${e.oldVersion} New version: ${e.newVersion}\n`:'')+
@@ -213,6 +194,7 @@ scanQRBtn.addEventListener('click',()=>{
             let purposes = Array.from(document.querySelectorAll('input[name="purpose"]:checked')).map(c=>c.value).join(' + ');
             if(serial && codeType && purposes && qrData){
                 addEntry(serial, codeType, purposes, qrData);
+                // Zvučni signal
                 let beep = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg'); beep.play();
                 serialInput.value=''; document.querySelectorAll('input[name="codeType"]').forEach(r=>r.checked=false);
                 document.querySelectorAll('input[name="purpose"]').forEach(c=>c.checked=false);
@@ -237,25 +219,19 @@ manualQR.addEventListener('input',()=>{
     }
 });
 
-// Copy button
-document.getElementById('copyMessage').addEventListener('click', ()=>{
+// Copy gumb
+document.getElementById('copyMessage').addEventListener('click',()=>{
     messageBox.select();
     navigator.clipboard.writeText(messageBox.value);
     alert('Message copied to clipboard!');
 });
 
-// Viber & WhatsApp buttons
-const viberNumber = '+38761234567';
-const whatsappNumber = '+38761234567';
-
-document.getElementById('openViber').addEventListener('click', () => {
-    window.open(`viber://chat?number=${viberNumber}`, '_blank');
+// Contact buttons
+document.getElementById('openViber').addEventListener('click',()=>{ window.open('viber://', '_blank'); });
+document.getElementById('openWhatsapp').addEventListener('click',()=>{ window.open('whatsapp://', '_blank'); });
+document.getElementById('openTeams').addEventListener('click',()=>{ 
+    window.open('https://teams.microsoft.com/l/chat/0/0?users=someone@example.com', '_blank'); 
 });
-
-document.getElementById('openWhatsapp').addEventListener('click', () => {
-    window.open(`https://wa.me/${whatsappNumber.replace(/\+/g,'')}`, '_blank');
-});
-
 </script>
 </body>
 </html>
