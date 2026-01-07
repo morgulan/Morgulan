@@ -68,7 +68,12 @@ input.success { border-color:#0f0; }
 <div id="codeList"></div>
 
 <h3>Generirana poruka:</h3>
-<textarea id="messageBox" readonly rows="10" style="background:#333;color:#0f0;"></textarea>
+<textarea id="messageBox" readonly rows="10" style="background:#333;color:#0f0;">
+Hello dear,
+I need auth codes for the following machines:
+
+</textarea>
+<button id="copyMessage">Copy Message</button>
 
 <div class="version-footer">Version 7.1.26</div>
 </div>
@@ -141,9 +146,12 @@ function addEntry(serial, codeType, purposes, qr){
     refreshMessageBox();
 }
 
-// Refresh poruke sa uvodnim tekstom
+// Refresh poruke
 function refreshMessageBox(){
-    messageBox.value = 'Hello dear, I need auth codes for following machines:\n\n';
+    messageBox.value = `Hello dear,
+I need auth codes for the following machines:
+
+`;
     codeEntries.forEach(e=>{
         messageBox.value += `SN: ${e.serial}\nCode type: ${e.codeType}\nPurpose: ${e.purposes}\n`+
             (e.oldVersion||e.newVersion?`Old version: ${e.oldVersion} New version: ${e.newVersion}\n`:'')+
@@ -187,6 +195,14 @@ manualQR.addEventListener('input',()=>{
         manualQR.value=''; serialInput.value=''; document.querySelectorAll('input[name="codeType"]').forEach(r=>r.checked=false);
         document.querySelectorAll('input[name="purpose"]').forEach(c=>c.checked=false); specialFieldsDiv.innerHTML='';
     }
+});
+
+// Copy message button
+document.getElementById('copyMessage').addEventListener('click', () => {
+    messageBox.select();
+    navigator.clipboard.writeText(messageBox.value)
+        .then(() => alert('Message copied to clipboard!'))
+        .catch(err => alert('Failed to copy message: ' + err));
 });
 </script>
 </body>
