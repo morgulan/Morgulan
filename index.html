@@ -5,89 +5,142 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Auth Code Generator</title>
 
+<!-- PWA -->
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="AuthCode">
+
+<script src="https://unpkg.com/html5-qrcode"></script>
 
 <style>
-body {
-  background:#000;
-  color:#fff;
-  font-family: Arial, sans-serif;
+:root{
+  --bg:#000;
+  --card:#111;
+  --text:#fff;
+  --input:#2a2a2a;
+  --border:#444;
+  --red:#e53935;
+  --blue:#1976d2;
+  --green:#4caf50;
+}
+
+*{box-sizing:border-box}
+
+body{
   margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:Arial,Helvetica,sans-serif;
 }
 
-.container {
-  max-width:650px;
+.container{
+  max-width:720px;
   margin:auto;
-  padding:15px;
+  padding:20px;
 }
 
-.card {
-  background:#111;
-  padding:15px;
-  border-radius:12px;
-  margin-bottom:15px;
+.card{
+  background:var(--card);
+  border-radius:14px;
+  padding:16px;
+  margin-bottom:18px;
+  box-shadow:0 0 12px rgba(0,0,0,.7);
 }
 
-input, textarea, select {
+h1,h3{
+  text-align:center;
+  margin:12px 0;
+}
+
+label{
+  display:block;
+  margin-top:12px;
+  font-size:14px;
+}
+
+input[type=text], textarea{
   width:100%;
-  background:#333;
-  color:#fff;
-  border:1px solid #555;
-  border-radius:6px;
-  padding:8px;
-  margin-top:5px;
-}
-
-label { margin-top:10px; display:block; }
-
-button {
-  width:100%;
-  padding:12px;
-  background:#007bff;
-  border:none;
+  background:var(--input);
+  border:1px solid var(--border);
+  color:var(--text);
   border-radius:8px;
-  color:white;
-  font-size:16px;
-  margin-top:10px;
+  padding:10px;
+  margin-top:6px;
 }
 
-button:disabled { background:#555; }
+textarea{resize:none}
 
-.checkbox-group, .radio-group {
+.radio-group,
+.checkbox-group{
   display:flex;
   flex-wrap:wrap;
-  gap:10px;
+  gap:14px;
+  margin-top:6px;
 }
 
-input[type=checkbox], input[type=radio] {
-  accent-color:red;
+input[type=radio],
+input[type=checkbox]{
+  accent-color:var(--red);
 }
 
-#qr-reader {
+button{
+  width:100%;
+  margin-top:16px;
+  padding:14px;
+  border:none;
+  border-radius:10px;
+  background:var(--blue);
+  color:#fff;
+  font-size:16px;
+}
+
+button:disabled{
+  background:#555;
+}
+
+#qr-reader{
+  margin-top:14px;
   display:none;
-  margin-top:10px;
 }
 
-#status {
-  margin-top:8px;
+.code-item{
+  background:#1b1b1b;
+  border-radius:10px;
+  padding:12px;
+  margin-bottom:10px;
+  position:relative;
+}
+
+.code-remove{
+  position:absolute;
+  top:8px;
+  right:10px;
+  color:var(--red);
   font-weight:bold;
+  cursor:pointer;
 }
 
-.green { color:#00ff6a; }
-.red { color:#ff4d4d; }
+.toast{
+  position:fixed;
+  bottom:20px;
+  left:50%;
+  transform:translateX(-50%);
+  background:var(--green);
+  color:#000;
+  padding:10px 18px;
+  border-radius:20px;
+  display:none;
+  font-weight:bold;
+  z-index:999;
+}
 
-.created-by, .version {
+.footer{
   text-align:center;
   font-size:12px;
   color:#aaa;
-}
-
-.code-item {
-  background:#222;
-  padding:10px;
-  border-radius:8px;
-  margin-bottom:8px;
+  margin-top:20px;
 }
 </style>
 </head>
@@ -95,126 +148,167 @@ input[type=checkbox], input[type=radio] {
 <body>
 <div class="container">
 
-<div class="created-by">Created by M.Orgulan</div>
-<h2 style="text-align:center;">Auth Code Generator</h2>
+<div class="footer">Created by M.Orgulan</div>
+<h1>Auth Code Generator</h1>
 
 <div class="card">
-<label>Serial number</label>
-<input id="serial">
+
+<label>Serial number:</label>
+<input type="text" id="serial">
 
 <label>Code type:</label>
 <div class="radio-group">
-<label><input type="radio" name="type" value="Hybrid"> Hybrid</label>
-<label><input type="radio" name="type" value="Regular"> Regular</label>
+  <label><input type="radio" name="ctype" value="Hybrid"> Hybrid</label>
+  <label><input type="radio" name="ctype" value="Regular"> Regular</label>
 </div>
 
 <label>Purpose:</label>
 <div class="checkbox-group">
-<label><input type="checkbox" value="New installation"> New installation</label>
-<label><input type="checkbox" value="Conversion"> Conversion</label>
-<label><input type="checkbox" value="Exciter replacement"> Exciter replacement</label>
-<label><input type="checkbox" value="Card replacement"> Card replacement</label>
-<label><input type="checkbox" value="RAM clear"> RAM clear</label>
-<label><input type="checkbox" value="Renewal"> Renewal</label>
+  <label><input type="checkbox" value="Conversion"> Conversion</label>
+  <label><input type="checkbox" value="Card replacement"> Card replacement</label>
+  <label><input type="checkbox" value="Exciter replacement"> Exciter replacement</label>
+  <label><input type="checkbox" value="New installation"> New installation</label>
+  <label><input type="checkbox" value="RAM clear"> RAM clear</label>
+  <label><input type="checkbox" value="Renewal"> Renewal</label>
 </div>
 
-<div id="extra"></div>
+<div id="extraFields"></div>
 
-<button id="scan">SCAN QR</button>
+<button id="scanBtn">Scan QR</button>
 <div id="qr-reader"></div>
 
-<label>Paste QR URL / string</label>
-<textarea id="manual" rows="2"></textarea>
+<label>Paste QR URL / code:</label>
+<textarea id="manualQR" rows="2"></textarea>
 
-<div id="status" class="red">QR not scanned</div>
-
-<button id="add" disabled>Add to message</button>
+<button id="addBtn" disabled>Add to message</button>
 </div>
 
-<div class="card">
-<h3>Message</h3>
-<textarea id="msg" rows="10" readonly>Hello dear,
+<h3>Entries</h3>
+<div id="entryList"></div>
+
+<h3>Generated message</h3>
+<textarea id="message" rows="9" readonly>
+Hello dear,
 
 I need auth code for machine
 
 </textarea>
-<button onclick="copy()">Copy</button>
+<button onclick="copyMessage()">Copy message</button>
+
+<div class="footer">Version 1.1.25</div>
 </div>
 
-<div class="version">Version 1.1.25</div>
-</div>
-
-<script src="https://unpkg.com/html5-qrcode"></script>
+<div id="toast" class="toast">QR scanned ✓</div>
 
 <script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("sw.js");
+  });
+}
+
 let qrData="";
-const beep=new Audio("data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YRAAAAAA");
+let entries=[];
+let qr=null;
 
-function extract(text){
- let m=text.match(/code=([A-Fa-f0-9]{40})/);
- return m?m[1]:text.trim();
+const beep=()=>new Audio("data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YQAAAAA=").play();
+
+function extractCode(v){
+  let m=v.match(/code=([A-Fa-f0-9]{40})/);
+  return m?m[1]:v;
 }
 
-document.querySelectorAll("input[type=checkbox]").forEach(c=>{
- c.onchange=()=>{
-  extra.innerHTML="";
-  if(c.checked && c.value==="Conversion" || c.checked && c.value==="Card replacement"){
-    extra.innerHTML+=`<label>Old version</label><input id="oldv"><label>New version</label><input id="newv">`;
+function showToast(){
+  let t=document.getElementById("toast");
+  t.style.display="block";
+  setTimeout(()=>t.style.display="none",1500);
+}
+
+scanBtn.onclick=()=>{
+  qrReader.style.display="block";
+  qr ??= new Html5Qrcode("qr-reader");
+  qr.start({facingMode:"environment"},{fps:10,qrbox:250},
+    txt=>{
+      qrData=extractCode(txt);
+      manualQR.value=qrData;
+      qr.stop();
+      showToast();
+      beep();
+      updateAdd();
+    }
+  );
+};
+
+manualQR.oninput=e=>{
+  qrData=extractCode(e.target.value.trim());
+  updateAdd();
+};
+
+document.querySelectorAll("input[name=ctype],input[type=checkbox],#serial")
+.forEach(e=>e.onchange=updateAdd);
+
+function updateAdd(){
+  addBtn.disabled=!(serial.value && document.querySelector("input[name=ctype]:checked") && qrData);
+  renderExtra();
+}
+
+function renderExtra(){
+  extraFields.innerHTML="";
+  let p=[...document.querySelectorAll("input[type=checkbox]:checked")].map(x=>x.value);
+
+  if(p.includes("Conversion")||p.includes("Card replacement")){
+    extraFields.innerHTML+=`
+      <label>Old version:</label><input id="oldVersion">
+      <label>New version:</label><input id="newVersion">
+    `;
   }
-  if(c.checked && c.value==="Exciter replacement"){
-    extra.innerHTML+=`<label>Old Ex</label><input id="oldex"><label>New Ex</label><input id="newex">`;
+  if(p.includes("Exciter replacement")){
+    extraFields.innerHTML+=`
+      <label>Old Ex:</label><input id="oldEx">
+      <label>New Ex:</label><input id="newEx">
+    `;
   }
- };
-});
-
-scan.onclick=()=>{
- document.getElementById("qr-reader").style.display="block";
- const r=new Html5Qrcode("qr-reader");
- r.start({facingMode:"environment"},{fps:10,qrbox:250},t=>{
-   qrData=extract(t);
-   status.textContent="QR scanned";
-   status.className="green";
-   beep.play();
-   r.stop();
-   update();
- });
-};
-
-manual.oninput=()=>{
- qrData=extract(manual.value);
- status.textContent="QR entered";
- status.className="green";
- update();
-};
-
-function update(){
- add.disabled=!(serial.value && qrData && document.querySelector("input[name=type]:checked"));
 }
 
-serial.oninput=update;
-document.querySelectorAll("input[name=type]").forEach(r=>r.onchange=update);
-
-add.onclick=()=>{
- let purposes=[...document.querySelectorAll("input[type=checkbox]:checked")].map(x=>x.value).join(" + ");
- msg.value+=`SN: ${serial.value}
-Code type: ${document.querySelector("input[name=type]:checked").value}
-Purpose: ${purposes}
-QR code: ${qrData}
-
-`;
- qrData="";
- status.textContent="QR not scanned";
- status.className="red";
+addBtn.onclick=()=>{
+  let entry={
+    sn:serial.value,
+    type:document.querySelector("input[name=ctype]:checked").value,
+    purpose:[...document.querySelectorAll("input[type=checkbox]:checked")].map(x=>x.value).join(" + "),
+    qr:qrData,
+    ov:oldVersion?.value||"",
+    nv:newVersion?.value||"",
+    oe:oldEx?.value||"",
+    ne:newEx?.value||""
+  };
+  entries.push(entry);
+  renderEntries();
 };
 
-function copy(){
- msg.select();
- navigator.clipboard.writeText(msg.value);
- alert("Copied");
+function renderEntries(){
+  entryList.innerHTML="";
+  message.value="Hello dear,\n\nI need auth code for machine\n\n";
+
+  entries.forEach((e,i)=>{
+    let d=document.createElement("div");
+    d.className="code-item";
+    d.innerHTML=`
+      <span class="code-remove" onclick="entries.splice(${i},1);renderEntries()">X</span>
+      SN: ${e.sn}
+      Code type: ${e.type}
+      Purpose: ${e.purpose}
+      ${e.ov?`Old version: ${e.ov}\nNew version: ${e.nv}`:""}
+      ${e.oe?`Old Ex: ${e.oe}\nNew Ex: ${e.ne}`:""}
+      QR: ${e.qr}
+    `;
+    entryList.appendChild(d);
+    message.value+=d.innerText+"\n\n";
+  });
 }
 
-if("serviceWorker"in navigator){
- navigator.serviceWorker.register("service-worker.js");
+function copyMessage(){
+  message.select();
+  navigator.clipboard.writeText(message.value);
 }
 </script>
 </body>
