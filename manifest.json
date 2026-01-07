@@ -1,7 +1,8 @@
 {
   "name": "Auth Code Generator",
   "short_name": "AuthCode",
-  "start_url": "./index.html",
+  "start_url": "/Morgulan/?ver=7.1.26",
+  "scope": "/Morgulan/",
   "display": "standalone",
   "background_color": "#000000",
   "theme_color": "#000000",
