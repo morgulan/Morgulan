@@ -4,256 +4,263 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Auth Code Generator</title>
+<link rel="manifest" href="manifest.json">
 <style>
 body {
-  margin:0; padding:0;
-  font-family: Arial, sans-serif;
-  background:#000;
-  color:#fff;
+    font-family: Arial, sans-serif;
+    background: #000;
+    color: #fff;
+    margin: 0;
+    padding: 0;
 }
 .container {
-  max-width:700px;
-  margin:auto;
-  padding:20px;
+    max-width: 700px;
+    margin: auto;
+    padding: 20px;
 }
-h1 { text-align:center; margin-bottom:20px; }
+h1 {
+    text-align: center;
+    margin-bottom: 20px;
+}
 .card {
-  background:#111;
-  padding:20px;
-  margin-bottom:20px;
-  border-radius:12px;
-  box-shadow:0 2px 6px rgba(255,255,255,0.1);
+    background: #111;
+    padding: 20px;
+    margin-bottom: 15px;
+    border-radius: 12px;
+    box-shadow: 0 2px 6px rgba(255,255,255,0.1);
 }
-label { display:block; margin-top:10px; font-weight:bold; }
-input[type=text], textarea {
-  width:100%;
-  padding:10px;
-  margin-top:5px;
-  border:none;
-  border-radius:6px;
-  background:#333;
-  color:#fff;
+label {
+    display: block;
+    margin-top: 10px;
+    font-weight: bold;
 }
-.radio-group, .checkbox-group {
-  display:flex;
-  gap:15px;
-  flex-wrap:wrap;
-  margin-top:5px;
+input[type=text], select, textarea {
+    width: 100%;
+    padding: 8px;
+    margin-top:5px;
+    border-radius: 6px;
+    border: 1px solid #555;
+    background: #333;
+    color: #fff;
 }
-input[type=checkbox]:checked::after {
-  content:'✔';
-  color:red;
-  position:absolute;
-  left:4px;
-  top:0px;
-  font-weight:bold;
+.checkbox-group, .radio-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-top:5px;
+}
+.checkbox-group label input, .radio-group label input {
+    accent-color: red;
 }
 button {
-  padding:12px;
-  width:100%;
-  border:none;
-  border-radius:8px;
-  background:#007BFF;
-  color:#fff;
-  font-size:16px;
-  cursor:pointer;
-  margin-top:15px;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    background: #007BFF;
+    color: #fff;
+    font-size: 16px;
+    cursor: pointer;
+    margin-top: 10px;
+    width: 100%;
 }
-button:disabled { background:#555; cursor:not-allowed; }
-#qr-reader { width:100%; margin-top:10px; }
+button:disabled {
+    background: #555;
+    cursor: not-allowed;
+}
+#qr-reader {
+    width: 100%;
+    margin-top: 10px;
+}
 .code-item {
-  background:#222;
-  padding:10px;
-  border-radius:8px;
-  margin-bottom:10px;
-  word-break:break-word;
+    background:#222;
+    border-radius:8px;
+    padding:10px;
+    margin-bottom:8px;
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    flex-wrap:wrap;
 }
-#manualQR { background:#333; color:#fff; margin-top:10px; }
-.version-footer, .created-by { text-align:center; font-size:12px; color:#aaa; margin-top:10px; }
+.code-details {
+    flex:1;
+}
+.code-qr {
+    font-family: monospace;
+    font-size:12px;
+    color:#0f0;
+    word-break: break-all;
+    margin-top:5px;
+}
+.version-footer, .created-by {
+    text-align:center;
+    font-size:12px;
+    color:#888;
+}
 </style>
 </head>
 <body>
 <div class="container">
-  <div class="created-by">Created by M.Orgulan</div>
-  <h1>Auth Code Generator</h1>
-  <div class="card">
-    <label>Serijski broj:</label>
-    <input type="text" id="serialNumber">
+    <div class="created-by">Created by M.Orgulan</div>
+    <h1>Auth Code Generator</h1>
 
-    <label>Code type:</label>
-    <div class="radio-group">
-      <label><input type="radio" name="codeType" value="Hybrid"> Hybrid</label>
-      <label><input type="radio" name="codeType" value="Regular"> Regular</label>
+    <div class="card">
+        <label for="serialNumber">Serijski broj:</label>
+        <input type="text" id="serialNumber">
+
+        <label>Vrsta koda:</label>
+        <div class="radio-group">
+            <label><input type="radio" name="codeType" value="Hybrid"> Hybrid:</label>
+            <label><input type="radio" name="codeType" value="Regular"> Regular:</label>
+        </div>
+
+        <label>Namjena:</label>
+        <div class="checkbox-group">
+            <label><input type="checkbox" name="purpose" value="Conversion"> Conversion:</label>
+            <label><input type="checkbox" name="purpose" value="Card replacement"> Card replacement:</label>
+            <label><input type="checkbox" name="purpose" value="Exciter replacement"> Exciter replacement:</label>
+            <label><input type="checkbox" name="purpose" value="Renewal"> Renewal:</label>
+            <label><input type="checkbox" name="purpose" value="New installation"> New installation:</label>
+            <label><input type="checkbox" name="purpose" value="RAM clear"> RAM clear:</label>
+        </div>
+
+        <div id="specialFields"></div>
+
+        <label>QR kod:</label>
+        <button id="scanQR">Scan QR</button>
+        <input type="file" id="qrFileInput" accept="image/*" style="display:none;" />
+        <div id="qr-reader" style="display:none;"></div>
+
+        <label for="manualQR">Paste QR URL / string:</label>
+        <textarea id="manualQR" placeholder="Paste QR code here..." rows="2"></textarea>
     </div>
 
-    <label>Purpose:</label>
-    <div class="checkbox-group">
-      <label><input type="checkbox" name="purpose" value="Conversion"> Conversion</label>
-      <label><input type="checkbox" name="purpose" value="Card replacement"> Card replacement</label>
-      <label><input type="checkbox" name="purpose" value="Exciter replacement"> Exciter replacement</label>
-      <label><input type="checkbox" name="purpose" value="Renewal"> Renewal</label>
-      <label><input type="checkbox" name="purpose" value="New installation"> New installation</label>
-      <label><input type="checkbox" name="purpose" value="RAM clear"> RAM clear</label>
-    </div>
+    <h3>Lista unosa:</h3>
+    <div id="codeList"></div>
 
-    <div id="specialFields"></div>
-
-    <label>Scan QR Code:</label>
-    <button id="scanQR">Scan QR</button>
-    <div id="qr-reader" style="display:none;"></div>
-
-    <label>Paste QR URL / string:</label>
-    <textarea id="manualQR" placeholder="Paste QR code here..." rows="2"></textarea>
-
-    <button id="addCode" disabled>Add to Message</button>
-  </div>
-
-  <h3>Lista unosa:</h3>
-  <div id="codeList"></div>
-
-  <h3>Generirana poruka:</h3>
-  <textarea id="messageBox" readonly style="height:200px;">
-Hello dear,
+    <h3>Generirana poruka:</h3>
+    <textarea id="messageBox" readonly style="height:250px;">Hello dear,
 
 I need auth code for machine
 
 </textarea>
-  <button id="copyMessage">Copy Message</button>
 
-  <div class="version-footer">Version 1.1.25</div>
+    <div class="version-footer">Version 1.1.25</div>
 </div>
 
 <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 <script>
 const serialInput = document.getElementById('serialNumber');
-const addCodeBtn = document.getElementById('addCode');
 const codeList = document.getElementById('codeList');
 const scanQRBtn = document.getElementById('scanQR');
 const qrReaderDiv = document.getElementById('qr-reader');
 const manualQR = document.getElementById('manualQR');
-const specialFieldsDiv = document.getElementById('specialFields');
 const messageBox = document.getElementById('messageBox');
+const specialFieldsDiv = document.getElementById('specialFields');
 
-let qrData = '';
-let codeEntries = [];
 let html5QrcodeScanner = null;
+let codeEntries = [];
+let qrData = '';
 
 function extractCode(url){
-  const match = url.match(/code=([A-Fa-f0-9]{40})/);
-  return match ? match[1] : url;
-}
-
-function updateAddButton(){
-  const serial = serialInput.value.trim();
-  const codeType = document.querySelector('input[name="codeType"]:checked');
-  const purposes = document.querySelectorAll('input[name="purpose"]:checked');
-  addCodeBtn.disabled = !(serial && codeType && purposes.length>0 && qrData);
+    let match = url.match(/code=([A-Fa-f0-9]{40})/);
+    return match ? match[1] : url;
 }
 
 function updateSpecialFields(){
-  specialFieldsDiv.innerHTML='';
-  const purposes = Array.from(document.querySelectorAll('input[name="purpose"]:checked')).map(c=>c.value);
-  if(purposes.includes('Conversion') || purposes.includes('Card replacement')){
-    const oldV = document.createElement('input');
-    oldV.type='text'; oldV.id='oldVersion'; oldV.placeholder='Old version';
-    const newV = document.createElement('input');
-    newV.type='text'; newV.id='newVersion'; newV.placeholder='New version';
-    specialFieldsDiv.appendChild(oldV); specialFieldsDiv.appendChild(newV);
-  }
-  if(purposes.includes('Exciter replacement')){
-    const oldEx = document.createElement('input');
-    oldEx.type='text'; oldEx.id='oldEx'; oldEx.placeholder='Old Ex';
-    const newEx = document.createElement('input');
-    newEx.type='text'; newEx.id='newEx'; newEx.placeholder='New Ex';
-    specialFieldsDiv.appendChild(oldEx); specialFieldsDiv.appendChild(newEx);
-  }
+    specialFieldsDiv.innerHTML = '';
+    const purposes = Array.from(document.querySelectorAll('input[name="purpose"]:checked')).map(c=>c.value);
+
+    if(purposes.includes('Conversion') || purposes.includes('Card replacement')){
+        let oldV = document.createElement('input');
+        oldV.type='text'; oldV.id='oldVersion'; oldV.placeholder='Old version'; oldV.style.marginTop='5px';
+        let newV = document.createElement('input');
+        newV.type='text'; newV.id='newVersion'; newV.placeholder='New version'; newV.style.marginTop='5px';
+        specialFieldsDiv.appendChild(oldV);
+        specialFieldsDiv.appendChild(newV);
+    }
+    if(purposes.includes('Exciter replacement')){
+        let oldEx = document.createElement('input');
+        oldEx.type='text'; oldEx.id='oldEx'; oldEx.placeholder='Old Ex'; oldEx.style.marginTop='5px';
+        let newEx = document.createElement('input');
+        newEx.type='text'; newEx.id='newEx'; newEx.placeholder='New Ex'; newEx.style.marginTop='5px';
+        specialFieldsDiv.appendChild(oldEx);
+        specialFieldsDiv.appendChild(newEx);
+    }
 }
 
-serialInput.addEventListener('input', updateAddButton);
-document.querySelectorAll('input[name="codeType"]').forEach(r=>r.addEventListener('change', updateAddButton));
 document.querySelectorAll('input[name="purpose"]').forEach(c=>{
-  c.addEventListener('change', ()=>{
-    updateAddButton();
-    updateSpecialFields();
-  });
+    c.addEventListener('change', updateSpecialFields);
 });
 
-manualQR.addEventListener('input', ()=>{
-  qrData = manualQR.value.trim()? extractCode(manualQR.value.trim()):'';
-  updateAddButton();
-});
+function addEntry(){
+    const serial = serialInput.value.trim();
+    const codeType = document.querySelector('input[name="codeType"]:checked')?.value;
+    const purposes = Array.from(document.querySelectorAll('input[name="purpose"]:checked')).map(c=>c.value).join(' + ');
+    if(!serial || !codeType || !purposes || !qrData) return;
 
-scanQRBtn.addEventListener('click', ()=>{
-  qrReaderDiv.style.display='block';
-  if(!html5QrcodeScanner){
-    html5QrcodeScanner = new Html5Qrcode("qr-reader");
-  }
-  html5QrcodeScanner.start(
-    {facingMode:"environment"},
-    {fps:10, qrbox:250},
-    decodedText=>{
-      qrData = extractCode(decodedText);
-      new Audio('https://www.soundjay.com/buttons/beep-07.mp3').play();
-      addToMessage();
-      html5QrcodeScanner.stop();
-      qrReaderDiv.style.display='none';
-    },
-    errMsg=>{}
-  ).catch(err=>console.error(err));
-});
+    const oldV = document.getElementById('oldVersion')?.value || '';
+    const newV = document.getElementById('newVersion')?.value || '';
+    const oldEx = document.getElementById('oldEx')?.value || '';
+    const newEx = document.getElementById('newEx')?.value || '';
 
-function addToMessage(){
-  const serial = serialInput.value.trim();
-  if(!serial || !qrData) return;
-  const codeType = document.querySelector('input[name="codeType"]:checked')?.value;
-  const purposes = Array.from(document.querySelectorAll('input[name="purpose"]:checked')).map(c=>c.value).join(' + ');
+    let entry = {serial, codeType, purposes, qrData, oldV, newV, oldEx, newEx};
+    codeEntries.push(entry);
 
-  const oldVersion = document.getElementById('oldVersion')?.value || '';
-  const newVersion = document.getElementById('newVersion')?.value || '';
-  const oldEx = document.getElementById('oldEx')?.value || '';
-  const newEx = document.getElementById('newEx')?.value || '';
+    // create visual item
+    let div = document.createElement('div');
+    div.className='code-item';
+    let details = document.createElement('div');
+    details.className='code-details';
+    details.innerHTML=`<strong>SN:</strong> ${serial} | <strong>${codeType}:</strong> ${purposes}`;
+    if(oldV||newV) details.innerHTML+=`<br><strong>Old version:</strong> ${oldV} <strong>New version:</strong> ${newV}`;
+    if(oldEx||newEx) details.innerHTML+=`<br><strong>Old Ex:</strong> ${oldEx} <strong>New Ex:</strong> ${newEx}`;
+    details.innerHTML+=`<div class="code-qr">${qrData}</div>`;
+    div.appendChild(details);
+    codeList.appendChild(div);
 
-  const entry = {serial, codeType, purposes, qrData, oldVersion, newVersion, oldEx, newEx};
-  codeEntries.push(entry);
+    refreshMessageBox();
 
-  const div = document.createElement('div');
-  div.className='code-item';
-  div.innerHTML=`<strong>SN:</strong> ${serial}<br>
-                 <strong>Code type:</strong> ${codeType}<br>
-                 <strong>Purpose:</strong> ${purposes}`+
-                 (oldVersion? `<br><strong>Old version:</strong> ${oldVersion}`:'')+
-                 (newVersion? `<br><strong>New version:</strong> ${newVersion}`:'')+
-                 (oldEx? `<br><strong>Old Ex:</strong> ${oldEx}`:'')+
-                 (newEx? `<br><strong>New Ex:</strong> ${newEx}`:'')+
-                 `<br><strong>QR:</strong> ${qrData}`;
-  codeList.appendChild(div);
-
-  refreshMessageBox();
-
-  serialInput.value=''; qrData=''; specialFieldsDiv.innerHTML='';
-  document.querySelectorAll('input[name="codeType"]').forEach(r=>r.checked=false);
-  document.querySelectorAll('input[name="purpose"]').forEach(c=>c.checked=false);
-  updateAddButton();
+    // reset fields
+    serialInput.value=''; document.querySelectorAll('input[name="codeType"]').forEach(r=>r.checked=false);
+    document.querySelectorAll('input[name="purpose"]').forEach(c=>c.checked=false);
+    specialFieldsDiv.innerHTML=''; qrData='';
+    manualQR.value='';
 }
-
-addCodeBtn.addEventListener('click', addToMessage);
 
 function refreshMessageBox(){
-  messageBox.value="Hello dear,\n\nI need auth code for machine\n\n";
-  codeEntries.forEach(e=>{
-    messageBox.value+=`SN: ${e.serial}\nCode type: ${e.codeType}\nPurpose: ${e.purposes}`;
-    if(e.oldVersion) messageBox.value+=`\nOld version: ${e.oldVersion}`;
-    if(e.newVersion) messageBox.value+=`\nNew version: ${e.newVersion}`;
-    if(e.oldEx) messageBox.value+=`\nOld Ex: ${e.oldEx}`;
-    if(e.newEx) messageBox.value+=`\nNew Ex: ${e.newEx}`;
-    messageBox.value+=`\nQR: ${e.qrData}\n\n`;
-  });
+    messageBox.value="Hello dear,\n\nI need auth code for machine\n\n";
+    codeEntries.forEach(entry=>{
+        messageBox.value+=`SN: ${entry.serial}\nCode type: ${entry.codeType}\nPurpose: ${entry.purposes}`;
+        if(entry.oldV||entry.newV) messageBox.value+=`\nOld version: ${entry.oldV}\nNew version: ${entry.newV}`;
+        if(entry.oldEx||entry.newEx) messageBox.value+=`\nOld Ex: ${entry.oldEx}\nNew Ex: ${entry.newEx}`;
+        messageBox.value+=`\nQR code: ${entry.qrData}\n\n`;
+    });
 }
 
-document.getElementById('copyMessage').addEventListener('click', ()=>{
-  messageBox.select();
-  navigator.clipboard.writeText(messageBox.value);
-  alert('Message copied!');
+// QR scanning
+scanQRBtn.addEventListener('click', ()=>{
+    qrReaderDiv.style.display='block';
+    if(!html5QrcodeScanner) html5QrcodeScanner = new Html5Qrcode("qr-reader");
+    html5QrcodeScanner.start(
+        {facingMode:"environment"},
+        {fps:10, qrbox:250},
+        decodedText=>{
+            qrData = extractCode(decodedText);
+            // beep
+            new Audio('https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg').play();
+            addEntry();
+            qrReaderDiv.style.display='none';
+            html5QrcodeScanner.stop();
+        },
+        err=>{}
+    ).catch(err=>console.error(err));
+});
+
+// manual paste
+manualQR.addEventListener('input', ()=>{
+    let text = manualQR.value.trim();
+    qrData = text ? extractCode(text) : '';
+    if(qrData) addEntry();
 });
 </script>
 </body>
