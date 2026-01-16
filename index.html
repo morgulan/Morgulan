@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Auth Code Generator</title>
 
-<!-- Sprječavanje cache-a -->
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
 <meta http-equiv="Pragma" content="no-cache" />
 <meta http-equiv="Expires" content="0" />
@@ -30,19 +29,19 @@ button:disabled { background:#555; cursor:not-allowed;}
 .purpose-special { margin-top:5px; display:flex; gap:5px; flex-wrap:wrap;}
 input.success { border-color:#0f0; }
 
-/* Gumbi za kontakte */
 .contact-buttons { display:flex; gap:10px; flex-wrap:wrap; margin-top:15px; }
 .contact-buttons a { flex:1; display:flex; align-items:center; justify-content:center; padding:10px; border-radius:8px; color:#fff; font-weight:bold; text-decoration:none; gap:5px; }
 .contact-buttons .whatsapp-btn { background:#25D366; }
 .contact-buttons .viber-btn { background:#665CAC; }
-.contact-buttons .teams-btn { background:#6264A7; }
 .btn-icon { width:20px; height:20px; }
 </style>
 </head>
+
 <body>
 <div class="container">
     <div class="created-by">Created by M.Orgulan</div>
     <h1>Auth Code Generator</h1>
+
 <div class="card">
     <label>Serijski broj:</label>
     <input type="text" id="serialNumber">
@@ -79,16 +78,12 @@ input.success { border-color:#0f0; }
 <textarea id="messageBox" readonly rows="10" style="background:#333;color:#0f0;"></textarea>
 <button id="copyMessage">Copy Message</button>
 
-<!-- Gumbi za kontakte -->
 <div class="contact-buttons">
-    <a href="viber://chat?number=%2B359896710272" class="viber-btn" target="_blank">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/2/2d/Viber_logo_icon.svg" alt="Viber" class="btn-icon"> Viber
+    <a href="viber://chat?number=%2B359896710272" class="viber-btn">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/2/2d/Viber_logo_icon.svg" class="btn-icon"> Viber
     </a>
-    <a href="https://wa.me/" class="whatsapp-btn" target="_blank">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/3/3b/WhatsApp_icon.svg" alt="WhatsApp" class="btn-icon"> WhatsApp
-    </a>
-    <a href="https://teams.microsoft.com/l/chat/0/0?users=someone@example.com" class="teams-btn" target="_blank">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/4/44/Microsoft_Office_Teams_%282019%E2%80%93present%29.svg" alt="Teams" class="btn-icon"> Teams
+    <a href="https://wa.me/" class="whatsapp-btn">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/3/3b/WhatsApp_icon.svg" class="btn-icon"> WhatsApp
     </a>
 </div>
 
@@ -105,12 +100,11 @@ let qrReaderDiv = document.getElementById('qr-reader');
 let specialFieldsDiv = document.getElementById('specialFields');
 let manualQR = document.getElementById('manualQR');
 
-let qrData = '';
 let html5QrcodeScanner = null;
 let codeEntries = [];
 
 function extractCode(url){
-    let match = url.match(/code=([A-Fa-f0-9]{40})/);
+    let match = url.match(/code=([A-Fa-f0-9]{42})/);
     return match ? match[1] : url;
 }
 
@@ -119,103 +113,82 @@ function updateSpecialFields(){
     const purposes = Array.from(document.querySelectorAll('input[name="purpose"]:checked')).map(c=>c.value);
     purposes.forEach(purpose=>{
         if(purpose==='Conversion' || purpose==='Card replacement'){
-            let oldVersion = document.createElement('input');
-            oldVersion.type='text'; oldVersion.id='oldVersion'; oldVersion.placeholder='Old version';
-            let newVersion = document.createElement('input');
-            newVersion.type='text'; newVersion.id='newVersion'; newVersion.placeholder='New version';
-            specialFieldsDiv.appendChild(oldVersion);
-            specialFieldsDiv.appendChild(newVersion);
+            specialFieldsDiv.innerHTML += `<input type="text" id="oldVersion" placeholder="Old version">
+                                           <input type="text" id="newVersion" placeholder="New version">`;
         }
         if(purpose==='Exciter replacement'){
-            let oldEx = document.createElement('input');
-            oldEx.type='text'; oldEx.id='oldEx'; oldEx.placeholder='Old Ex';
-            let newEx = document.createElement('input');
-            newEx.type='text'; newEx.id='newEx'; newEx.placeholder='New Ex';
-            specialFieldsDiv.appendChild(oldEx);
-            specialFieldsDiv.appendChild(newEx);
+            specialFieldsDiv.innerHTML += `<input type="text" id="oldEx" placeholder="Old Ex">
+                                           <input type="text" id="newEx" placeholder="New Ex">`;
         }
     });
 }
 
 document.querySelectorAll('input[name="purpose"]').forEach(c => c.addEventListener('change', updateSpecialFields));
 
-// Automatski add QR ili manual u messageBox
 function addEntry(serial, codeType, purposes, qr){
-    let oldVersion = document.getElementById('oldVersion')?.value || '';
-    let newVersion = document.getElementById('newVersion')?.value || '';
-    let oldEx = document.getElementById('oldEx')?.value || '';
-    let newEx = document.getElementById('newEx')?.value || '';
-
-    let entry = {serial, codeType, purposes, qrData: qr, oldVersion, newVersion, oldEx, newEx};
+    let entry = {serial, codeType, purposes, qr};
     codeEntries.push(entry);
 
     let div = document.createElement('div');
     div.className='code-item';
-    let details = document.createElement('div'); details.className='code-details';
-    details.innerHTML = `<strong>SN:</strong> ${serial} | <strong>${codeType}</strong> | <strong>${purposes}</strong>`+
-        (oldVersion||newVersion? `<br><strong>Old:</strong> ${oldVersion} <strong>New:</strong> ${newVersion}`:'')+
-        (oldEx||newEx? `<br><strong>Old Ex:</strong> ${oldEx} <strong>New Ex:</strong> ${newEx}`:'')+
-        `<div class="code-qr">${qr}</div>`;
-    let removeBtn=document.createElement('span'); removeBtn.className='code-remove'; removeBtn.textContent='X';
-    removeBtn.onclick=()=>{codeList.removeChild(div); codeEntries = codeEntries.filter(e=>e!==entry); refreshMessageBox();}
-    div.appendChild(details); div.appendChild(removeBtn); codeList.appendChild(div);
+    div.innerHTML = `<div class="code-details">
+        <strong>SN:</strong> ${serial} | <strong>${codeType}</strong> | <strong>${purposes}</strong>
+        <div class="code-qr">${qr}</div>
+    </div>
+    <span class="code-remove">X</span>`;
 
+    div.querySelector('.code-remove').onclick=()=>{
+        codeList.removeChild(div);
+        codeEntries = codeEntries.filter(e=>e!==entry);
+        refreshMessageBox();
+    };
+
+    codeList.appendChild(div);
     refreshMessageBox();
 }
 
-// Refresh poruke
 function refreshMessageBox(){
     messageBox.value = "Hello dear,\n\nI need auth codes for the following machines:\n\n";
     codeEntries.forEach(e=>{
-        messageBox.value += `SN: ${e.serial}\nCode type: ${e.codeType}\nPurpose: ${e.purposes}\n`+
-            (e.oldVersion||e.newVersion?`Old version: ${e.oldVersion} New version: ${e.newVersion}\n`:'')+
-            (e.oldEx||e.newEx?`Old Ex: ${e.oldEx} New Ex: ${e.newEx}\n`:'')+
-            `QR: ${e.qrData}\n\n`;
+        messageBox.value += `SN: ${e.serial}\nCode type: ${e.codeType}\nPurpose: ${e.purposes}\nQR: ${e.qr}\n\n`;
     });
 }
 
-// QR scan
 scanQRBtn.addEventListener('click',()=>{
     qrReaderDiv.style.display='block';
     if(!html5QrcodeScanner) html5QrcodeScanner = new Html5Qrcode("qr-reader");
     html5QrcodeScanner.start({facingMode:"environment"},{fps:10,qrbox:250},
         decoded=>{
-            qrData = extractCode(decoded);
+            let qr = extractCode(decoded);
             let serial = serialInput.value.trim();
-            let codeType = document.querySelector('input[name="codeType"]:checked')?.value || '';
+            let codeType = document.querySelector('input[name="codeType"]:checked')?.value;
             let purposes = Array.from(document.querySelectorAll('input[name="purpose"]:checked')).map(c=>c.value).join(' + ');
-            if(serial && codeType && purposes && qrData){
-                addEntry(serial, codeType, purposes, qrData);
-                let beep = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg'); beep.play();
-                serialInput.value=''; document.querySelectorAll('input[name="codeType"]').forEach(r=>r.checked=false);
-                document.querySelectorAll('input[name="purpose"]').forEach(c=>c.checked=false);
-                specialFieldsDiv.innerHTML=''; qrReaderDiv.style.display='none'; html5QrcodeScanner.stop();
-            } else {alert('Popuni serial, code type i purpose!');}
-        },
-        err=>{console.log(err);}
-    ).catch(e=>console.error(e));
+            if(serial && codeType && purposes){
+                addEntry(serial, codeType, purposes, qr);
+                new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg').play();
+                html5QrcodeScanner.stop();
+                qrReaderDiv.style.display='none';
+            }
+        }
+    );
 });
 
-// Manual input
 manualQR.addEventListener('input',()=>{
-    qrData = extractCode(manualQR.value.trim());
+    let qr = extractCode(manualQR.value.trim());
     let serial = serialInput.value.trim();
-    let codeType = document.querySelector('input[name="codeType"]:checked')?.value || '';
+    let codeType = document.querySelector('input[name="codeType"]:checked')?.value;
     let purposes = Array.from(document.querySelectorAll('input[name="purpose"]:checked')).map(c=>c.value).join(' + ');
-    if(serial && codeType && purposes && qrData){
-        addEntry(serial, codeType, purposes, qrData);
-        let beep = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg'); beep.play();
-        manualQR.value=''; serialInput.value=''; document.querySelectorAll('input[name="codeType"]').forEach(r=>r.checked=false);
-        document.querySelectorAll('input[name="purpose"]').forEach(c=>c.checked=false); specialFieldsDiv.innerHTML='';
+    if(serial && codeType && purposes && qr){
+        addEntry(serial, codeType, purposes, qr);
+        new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg').play();
+        manualQR.value='';
     }
 });
 
-// Copy message
-document.getElementById('copyMessage').addEventListener('click',()=>{
-    messageBox.select();
+document.getElementById('copyMessage').onclick=()=>{
     navigator.clipboard.writeText(messageBox.value);
-    alert('Message copied to clipboard!');
-});
+    alert('Message copied');
+};
 </script>
 </body>
 </html>
