@@ -10,85 +10,326 @@
 <meta http-equiv="Expires" content="0" />
 
 <style>
-body { font-family: Arial, sans-serif; background: #000; color:#fff; margin:0; padding:0;}
-.container { max-width: 700px; margin: auto; padding: 20px; }
-h1 { text-align:center; margin-bottom:10px;}
-.card { background: #111; padding: 15px; margin-bottom: 15px; border-radius: 12px; box-shadow: 0 2px 6px rgba(255,255,255,0.1);}
-label { display: block; margin-top: 10px; }
-input[type=text], select, textarea { width: 100%; padding: 8px; margin-top:5px; border-radius: 6px; border: 1px solid #555; background:#333; color:#fff; }
-.checkbox-group, .radio-group { display:flex; gap: 10px; margin-top:5px; flex-wrap: wrap; align-items:center; }
-.checkbox-group label, .radio-group label { display:flex; align-items:center; gap:5px; }
-button { padding: 10px 15px; border:none; border-radius: 8px; background:#007BFF; color:#fff; font-size:16px; cursor:pointer; margin-top:10px; width:100%; }
-button:disabled { background:#555; cursor:not-allowed;}
-#qr-reader { width:100%; margin-top:10px; display:none; }
-.created-by, .version-footer { text-align:center; font-size:12px; color:#aaa; }
-.code-item { background:#222; border-radius:8px; padding:10px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap;}
-.code-details { flex:1;}
-.code-remove { cursor:pointer; color:red; font-weight:bold; margin-left:10px; }
-.code-qr { font-family: monospace; font-size:12px; color:#0f0; margin-top:5px; word-break:break-all;}
-.purpose-special { margin-top:5px; display:flex; gap:5px; flex-wrap:wrap;}
-input.success { border-color:#0f0; }
+:root{
+  --bg:#050507;
+  --card:#0e0f14;
+  --text:#e8e8ee;
+  --muted:#a7a7b7;
+  --line:rgba(255,255,255,.10);
+  --accent:#3b82f6;
+  --ok:#22c55e;
+  --danger:#ef4444;
+  --shadow: 0 10px 30px rgba(0,0,0,.55);
+  --r:16px;
+}
 
-.contact-buttons { display:flex; gap:10px; flex-wrap:wrap; margin-top:15px; }
-.contact-buttons a { flex:1; display:flex; align-items:center; justify-content:center; padding:10px; border-radius:8px; color:#fff; font-weight:bold; text-decoration:none; gap:5px; }
-.contact-buttons .whatsapp-btn { background:#25D366; }
-.contact-buttons .viber-btn { background:#665CAC; }
-.btn-icon { width:20px; height:20px; }
+*{ box-sizing:border-box; }
+body{
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  background: radial-gradient(1200px 600px at 30% -10%, rgba(59,130,246,.20), transparent 60%),
+              radial-gradient(800px 500px at 90% 0%, rgba(34,197,94,.14), transparent 55%),
+              var(--bg);
+  color:var(--text);
+  margin:0;
+}
+
+.container{ max-width: 760px; margin:auto; padding: 18px; }
+
+.header{
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+  padding: 14px 14px 8px; margin-bottom: 10px;
+}
+.brand{ display:flex; align-items:center; gap:10px; }
+.logo{
+  width:40px;height:40px;border-radius: 12px;
+  background: linear-gradient(135deg, rgba(59,130,246,.95), rgba(34,197,94,.85));
+  box-shadow: 0 10px 20px rgba(59,130,246,.15);
+  display:grid; place-items:center;
+}
+.logo svg{ filter: drop-shadow(0 6px 14px rgba(0,0,0,.35)); }
+h1{ font-size: 20px; margin:0; line-height:1.1; }
+.sub{ font-size: 12px; color: var(--muted); margin-top:2px; }
+.pill{
+  font-size:12px; color:#cdd3ff;
+  background: rgba(59,130,246,.12);
+  border:1px solid rgba(59,130,246,.25);
+  padding: 6px 10px; border-radius: 999px; white-space:nowrap;
+}
+
+.card{
+  background: linear-gradient(180deg, rgba(255,255,255,.04), transparent 45%),
+              linear-gradient(135deg, rgba(59,130,246,.06), rgba(34,197,94,.04)),
+              var(--card);
+  border:1px solid var(--line);
+  padding: 16px;
+  margin-bottom: 14px;
+  border-radius: var(--r);
+  box-shadow: var(--shadow);
+}
+
+label{ display:block; margin-top: 10px; color: #d8d8e6; font-size: 13px; }
+
+input[type=text], select, textarea{
+  width:100%;
+  padding: 11px 12px;
+  margin-top:7px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(255,255,255,.06);
+  color:var(--text);
+  outline:none;
+  transition: .15s ease;
+}
+input[type=text]:focus, textarea:focus{
+  border-color: rgba(59,130,246,.55);
+  box-shadow: 0 0 0 4px rgba(59,130,246,.14);
+}
+textarea#messageBox{
+  background: rgba(16, 185, 129, .06);
+  border: 1px solid rgba(34,197,94,.22);
+  color:#bbf7d0;
+}
+
+.grid{ display:grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 640px){ .grid{ grid-template-columns:1fr; } }
+
+.radio-group, .checkbox-group{
+  display:flex; gap:10px; margin-top:8px; flex-wrap:wrap;
+}
+.choice{
+  display:flex; align-items:center; gap:8px;
+  padding: 9px 10px;
+  border:1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.05);
+  border-radius: 999px;
+  cursor:pointer;
+  user-select:none;
+  transition:.15s ease;
+}
+.choice:hover{ border-color: rgba(59,130,246,.35); background: rgba(59,130,246,.08); }
+.choice input{ accent-color: var(--accent); }
+
+.purpose-special{
+  margin-top: 10px;
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+@media (max-width: 640px){ .purpose-special{ grid-template-columns:1fr; } }
+
+.actions{
+  display:grid; grid-template-columns: 1fr 1fr; gap: 10px;
+  margin-top: 12px;
+}
+@media (max-width: 640px){ .actions{ grid-template-columns:1fr; } }
+
+button{
+  padding: 12px 12px;
+  border:none;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(59,130,246,1), rgba(37,99,235,1));
+  color:#fff;
+  font-size: 15px;
+  font-weight: 800;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  box-shadow: 0 12px 22px rgba(59,130,246,.20);
+  transition: transform .10s ease, filter .15s ease;
+}
+button:hover{ filter: brightness(1.05); }
+button:active{ transform: translateY(1px); }
+button.secondary{
+  background: rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.14);
+  box-shadow:none;
+}
+button.secondary:hover{ background: rgba(255,255,255,.10); filter:none; }
+button:disabled{ background:#555; cursor:not-allowed; box-shadow:none; border:none; }
+
+#qr-reader{
+  width:100%;
+  margin-top:10px;
+  display:none;
+  border-radius: 14px;
+  overflow:hidden;
+  border:1px solid rgba(255,255,255,.12);
+}
+
+.code-item{
+  background: rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.10);
+  border-radius: 16px;
+  padding: 12px;
+  margin-bottom: 10px;
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:12px;
+}
+.code-details{ flex:1; }
+.code-details strong{ color:#dfe3ff; }
+.code-qr{
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 12px;
+  color: #a7f3d0;
+  margin-top:6px;
+  word-break:break-all;
+  opacity:.95;
+}
+.code-remove{
+  cursor:pointer;
+  color:#fff;
+  font-weight: 900;
+  background: rgba(239,68,68,.14);
+  border:1px solid rgba(239,68,68,.35);
+  width:34px;
+  height:34px;
+  border-radius: 12px;
+  display:grid;
+  place-items:center;
+}
+.code-remove:hover{ background: rgba(239,68,68,.22); }
+
+.contact-buttons{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:10px;
+  margin-top: 14px;
+}
+@media (max-width: 640px){ .contact-buttons{ grid-template-columns:1fr; } }
+.contact-buttons a{
+  display:flex; align-items:center; justify-content:center;
+  padding:12px 12px;
+  border-radius: 14px;
+  color:#fff;
+  font-weight: 900;
+  text-decoration:none;
+  gap:10px;
+  border:1px solid rgba(255,255,255,.10);
+}
+.whatsapp-btn{ background: rgba(37, 211, 102, .16); }
+.viber-btn{ background: rgba(102, 92, 172, .18); }
+.btn-icon{ width:20px; height:20px; }
+
+.footer{ text-align:center; font-size: 12px; color: var(--muted); padding: 8px 0 18px; }
+
+.toast{
+  position: fixed;
+  left: 50%;
+  bottom: 18px;
+  transform: translateX(-50%);
+  background: rgba(17, 24, 39, .92);
+  border: 1px solid rgba(255,255,255,.12);
+  color: #fff;
+  padding: 10px 12px;
+  border-radius: 999px;
+  box-shadow: var(--shadow);
+  display:none;
+  gap:10px;
+  align-items:center;
+  font-weight:900;
+  font-size: 13px;
+}
+.toast.show{ display:flex; }
 </style>
 </head>
 
 <body>
 <div class="container">
-    <div class="created-by">Created by M.Orgulan</div>
-    <h1>Auth Code Generator</h1>
 
-<div class="card">
-    <label>Serijski broj:</label>
-    <input type="text" id="serialNumber">
+  <div class="header">
+    <div class="brand">
+      <div class="logo" aria-hidden="true">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+          <path d="M12 2l8 4v6c0 5-3.5 9-8 10-4.5-1-8-5-8-10V6l8-4z" stroke="white" stroke-width="2"/>
+          <path d="M8.5 12l2.3 2.3L15.8 9.3" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div>
+        <h1>Auth Code Generator</h1>
+        <div class="sub">Created by M.Orgulan</div>
+      </div>
+    </div>
+    <div class="pill">Version 7.1.26</div>
+  </div>
+
+  <div class="card">
+    <div class="grid">
+      <div>
+        <label>Serijski broj:</label>
+        <input type="text" id="serialNumber" placeholder="npr. 12345678">
+      </div>
+      <div>
+        <label>Manual QR / Paste code:</label>
+        <textarea id="manualQR" placeholder="Paste QR URL or code here..." rows="2"></textarea>
+      </div>
+    </div>
 
     <label>Vrsta koda:</label>
     <div class="radio-group">
-        <label><input type="radio" name="codeType" value="Hybrid"> Hybrid:</label>
-        <label><input type="radio" name="codeType" value="Regular"> Regular:</label>
+      <label class="choice"><input type="radio" name="codeType" value="Hybrid"> Hybrid</label>
+      <label class="choice"><input type="radio" name="codeType" value="Regular"> Regular</label>
     </div>
 
     <label>Namjena:</label>
     <div class="checkbox-group">
-        <label><input type="checkbox" name="purpose" value="Conversion"> Conversion:</label>
-        <label><input type="checkbox" name="purpose" value="Card replacement"> Card replacement:</label>
-        <label><input type="checkbox" name="purpose" value="Exciter replacement"> Exciter replacement:</label>
-        <label><input type="checkbox" name="purpose" value="New installation"> New installation:</label>
-        <label><input type="checkbox" name="purpose" value="RAM clear"> RAM clear:</label>
-        <label><input type="checkbox" name="purpose" value="Renewal"> Renewal:</label>
+      <label class="choice"><input type="checkbox" name="purpose" value="Conversion"> Conversion</label>
+      <label class="choice"><input type="checkbox" name="purpose" value="Card replacement"> Card replacement</label>
+      <label class="choice"><input type="checkbox" name="purpose" value="Exciter replacement"> Exciter replacement</label>
+      <label class="choice"><input type="checkbox" name="purpose" value="New installation"> New installation</label>
+      <label class="choice"><input type="checkbox" name="purpose" value="RAM clear"> RAM clear</label>
+      <label class="choice"><input type="checkbox" name="purpose" value="Renewal"> Renewal</label>
     </div>
 
     <div id="specialFields" class="purpose-special"></div>
 
-    <button id="scanQR">Scan QR Code</button>
+    <div class="actions">
+      <button id="scanQR" type="button">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M7 7h3V5H7a2 2 0 0 0-2 2v3h2V7zm10 0v3h2V7a2 2 0 0 0-2-2h-3v2h3zm0 10h-3v2h3a2 2 0 0 0 2-2v-3h-2v3zM7 17v-3H5v3a2 2 0 0 0 2 2h3v-2H7z" stroke="white" stroke-width="2"/>
+          <path d="M8 12h8" stroke="white" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        Scan QR Code
+      </button>
+
+      <button id="copyMessage" type="button" class="secondary">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M9 9h10v10H9V9z" stroke="white" stroke-width="2"/>
+          <path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1" stroke="white" stroke-width="2"/>
+        </svg>
+        Copy Message
+      </button>
+    </div>
+
     <div id="qr-reader"></div>
+  </div>
 
-    <label>Manual QR / Paste code:</label>
-    <textarea id="manualQR" placeholder="Paste QR URL or code here..." rows="2"></textarea>
-</div>
+  <div class="card">
+    <label style="margin-top:0;">Lista unosa:</label>
+    <div id="codeList"></div>
+  </div>
 
-<h3>Lista unosa:</h3>
-<div id="codeList"></div>
+  <div class="card">
+    <label style="margin-top:0;">Generirana poruka:</label>
+    <textarea id="messageBox" readonly rows="10"></textarea>
+  </div>
 
-<h3>Generirana poruka:</h3>
-<textarea id="messageBox" readonly rows="10" style="background:#333;color:#0f0;"></textarea>
-<button id="copyMessage">Copy Message</button>
-
-<div class="contact-buttons">
+  <div class="contact-buttons">
     <a href="viber://chat?number=%2B359896710272" class="viber-btn">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/2/2d/Viber_logo_icon.svg" class="btn-icon"> Viber
+      <img src="https://upload.wikimedia.org/wikipedia/commons/2/2d/Viber_logo_icon.svg" class="btn-icon" alt=""> Viber
     </a>
     <a href="https://wa.me/" class="whatsapp-btn">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/3/3b/WhatsApp_icon.svg" class="btn-icon"> WhatsApp
+      <img src="https://upload.wikimedia.org/wikipedia/commons/3/3b/WhatsApp_icon.svg" class="btn-icon" alt=""> WhatsApp
     </a>
+  </div>
+
+  <div class="footer">© M.Orgulan</div>
 </div>
 
-<div class="version-footer">Version 7.1.26</div>
-</div>
+<div id="toast" class="toast" role="status" aria-live="polite">✅ Message copied</div>
 
 <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 <script>
@@ -102,93 +343,192 @@ let manualQR = document.getElementById('manualQR');
 
 let html5QrcodeScanner = null;
 let codeEntries = [];
+let scanning = false;
+let lastManualAdded = "";
 
+function showToast(text){
+  const t = document.getElementById('toast');
+  t.textContent = text;
+  t.classList.add('show');
+  clearTimeout(window.__toastTimer);
+  window.__toastTimer = setTimeout(()=>t.classList.remove('show'), 1400);
+}
+
+// OSTAVLJENO kako si imao (42 znaka iz code= parametra)
 function extractCode(url){
-    let match = url.match(/code=([A-Fa-f0-9]{42})/);
-    return match ? match[1] : url;
+  let match = url.match(/code=([A-Fa-f0-9]{42})/);
+  return match ? match[1] : url;
+}
+
+function safeBeep(){
+  try {
+    new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg').play();
+  } catch(e) {}
+}
+
+function getPurposes(){
+  return Array.from(document.querySelectorAll('input[name="purpose"]:checked')).map(c=>c.value);
 }
 
 function updateSpecialFields(){
-    specialFieldsDiv.innerHTML = '';
-    const purposes = Array.from(document.querySelectorAll('input[name="purpose"]:checked')).map(c=>c.value);
-    purposes.forEach(purpose=>{
-        if(purpose==='Conversion' || purpose==='Card replacement'){
-            specialFieldsDiv.innerHTML += `<input type="text" id="oldVersion" placeholder="Old version">
-                                           <input type="text" id="newVersion" placeholder="New version">`;
-        }
-        if(purpose==='Exciter replacement'){
-            specialFieldsDiv.innerHTML += `<input type="text" id="oldEx" placeholder="Old Ex">
-                                           <input type="text" id="newEx" placeholder="New Ex">`;
-        }
-    });
+  const purposes = getPurposes();
+
+  // spremi stare vrijednosti da se ne gube kad klikneš checkbox
+  const oldVersionVal = document.getElementById('oldVersion')?.value || "";
+  const newVersionVal = document.getElementById('newVersion')?.value || "";
+  const oldExVal = document.getElementById('oldEx')?.value || "";
+  const newExVal = document.getElementById('newEx')?.value || "";
+
+  const needsVersion = purposes.includes('Conversion') || purposes.includes('Card replacement');
+  const needsEx = purposes.includes('Exciter replacement');
+
+  specialFieldsDiv.innerHTML = '';
+
+  if(needsVersion){
+    specialFieldsDiv.innerHTML += `
+      <input type="text" id="oldVersion" placeholder="Old version" value="${oldVersionVal.replace(/"/g,'&quot;')}">
+      <input type="text" id="newVersion" placeholder="New version" value="${newVersionVal.replace(/"/g,'&quot;')}">
+    `;
+  }
+  if(needsEx){
+    specialFieldsDiv.innerHTML += `
+      <input type="text" id="oldEx" placeholder="Old Ex" value="${oldExVal.replace(/"/g,'&quot;')}">
+      <input type="text" id="newEx" placeholder="New Ex" value="${newExVal.replace(/"/g,'&quot;')}">
+    `;
+  }
 }
 
 document.querySelectorAll('input[name="purpose"]').forEach(c => c.addEventListener('change', updateSpecialFields));
 
+function buildPurposesString(){
+  const purposes = getPurposes();
+  let base = purposes.join(' + ');
+
+  // (opcionalno) uključi special info u Purpose line
+  const extras = [];
+  if(purposes.includes('Conversion') || purposes.includes('Card replacement')){
+    const ov = document.getElementById('oldVersion')?.value?.trim() || "";
+    const nv = document.getElementById('newVersion')?.value?.trim() || "";
+    if(ov || nv) extras.push(`Old/New ver: ${ov || '-'} -> ${nv || '-'}`);
+  }
+  if(purposes.includes('Exciter replacement')){
+    const oe = document.getElementById('oldEx')?.value?.trim() || "";
+    const ne = document.getElementById('newEx')?.value?.trim() || "";
+    if(oe || ne) extras.push(`Old/New Ex: ${oe || '-'} -> ${ne || '-'}`);
+  }
+
+  if(extras.length) base += ` (${extras.join('; ')})`;
+  return base;
+}
+
 function addEntry(serial, codeType, purposes, qr){
-    let entry = {serial, codeType, purposes, qr};
-    codeEntries.push(entry);
+  let entry = {serial, codeType, purposes, qr};
+  codeEntries.push(entry);
 
-    let div = document.createElement('div');
-    div.className='code-item';
-    div.innerHTML = `<div class="code-details">
-        <strong>SN:</strong> ${serial} | <strong>${codeType}</strong> | <strong>${purposes}</strong>
-        <div class="code-qr">${qr}</div>
+  let div = document.createElement('div');
+  div.className='code-item';
+  div.innerHTML = `<div class="code-details">
+      <strong>SN:</strong> ${serial} &nbsp;|&nbsp; <strong>${codeType}</strong> &nbsp;|&nbsp; <strong>${purposes}</strong>
+      <div class="code-qr">${qr}</div>
     </div>
-    <span class="code-remove">X</span>`;
+    <span class="code-remove" title="Remove">✕</span>`;
 
-    div.querySelector('.code-remove').onclick=()=>{
-        codeList.removeChild(div);
-        codeEntries = codeEntries.filter(e=>e!==entry);
-        refreshMessageBox();
-    };
-
-    codeList.appendChild(div);
+  div.querySelector('.code-remove').onclick=()=>{
+    codeList.removeChild(div);
+    codeEntries = codeEntries.filter(e=>e!==entry);
     refreshMessageBox();
+  };
+
+  codeList.appendChild(div);
+  refreshMessageBox();
 }
 
 function refreshMessageBox(){
-    messageBox.value = "Hello dear,\n\nI need auth codes for the following machines:\n\n";
-    codeEntries.forEach(e=>{
-        messageBox.value += `SN: ${e.serial}\nCode type: ${e.codeType}\nPurpose: ${e.purposes}\nQR: ${e.qr}\n\n`;
-    });
+  messageBox.value = "Hello dear,\n\nI need auth codes for the following machines:\n\n";
+  codeEntries.forEach(e=>{
+    messageBox.value += `SN: ${e.serial}\nCode type: ${e.codeType}\nPurpose: ${e.purposes}\nQR: ${e.qr}\n\n`;
+  });
 }
 
-scanQRBtn.addEventListener('click',()=>{
-    qrReaderDiv.style.display='block';
-    if(!html5QrcodeScanner) html5QrcodeScanner = new Html5Qrcode("qr-reader");
-    html5QrcodeScanner.start({facingMode:"environment"},{fps:10,qrbox:250},
-        decoded=>{
-            let qr = extractCode(decoded);
-            let serial = serialInput.value.trim();
-            let codeType = document.querySelector('input[name="codeType"]:checked')?.value;
-            let purposes = Array.from(document.querySelectorAll('input[name="purpose"]:checked')).map(c=>c.value).join(' + ');
-            if(serial && codeType && purposes){
-                addEntry(serial, codeType, purposes, qr);
-                new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg').play();
-                html5QrcodeScanner.stop();
-                qrReaderDiv.style.display='none';
-            }
-        }
+function tryAddFromInput(raw){
+  let qr = extractCode((raw || "").trim());
+  let serial = serialInput.value.trim();
+  let codeType = document.querySelector('input[name="codeType"]:checked')?.value;
+  let purposes = buildPurposesString();
+
+  // Ako je skeniran URL i extract fail-a, qr će biti cijeli URL -> to ti je OK kako si imao.
+  if(serial && codeType && purposes && qr){
+    addEntry(serial, codeType, purposes, qr);
+    safeBeep();
+    return true;
+  }
+  return false;
+}
+
+async function stopScanner(){
+  if(html5QrcodeScanner){
+    try { await html5QrcodeScanner.stop(); } catch(e) {}
+    try { await html5QrcodeScanner.clear(); } catch(e) {}
+  }
+  scanning = false;
+  qrReaderDiv.style.display='none';
+}
+
+scanQRBtn.addEventListener('click', async ()=>{
+  if(scanning) return;
+  qrReaderDiv.style.display='block';
+  if(!html5QrcodeScanner) html5QrcodeScanner = new Html5Qrcode("qr-reader");
+
+  scanning = true;
+  try{
+    await html5QrcodeScanner.start(
+      { facingMode:"environment" },
+      { fps:10, qrbox:250 },
+      async decoded=>{
+        const ok = tryAddFromInput(decoded);
+        if(ok) await stopScanner();
+      }
     );
+  }catch(err){
+    scanning = false;
+    qrReaderDiv.style.display='none';
+    showToast("❌ Camera not available");
+  }
 });
 
-manualQR.addEventListener('input',()=>{
-    let qr = extractCode(manualQR.value.trim());
-    let serial = serialInput.value.trim();
-    let codeType = document.querySelector('input[name="codeType"]:checked')?.value;
-    let purposes = Array.from(document.querySelectorAll('input[name="purpose"]:checked')).map(c=>c.value).join(' + ');
-    if(serial && codeType && purposes && qr){
-        addEntry(serial, codeType, purposes, qr);
-        new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg').play();
-        manualQR.value='';
+// Manual: dodaj samo na PASTE ili ENTER (bez dupliranja)
+manualQR.addEventListener('paste', ()=>{
+  setTimeout(()=>{
+    const raw = manualQR.value.trim();
+    if(!raw) return;
+    if(raw === lastManualAdded) return;
+    if(tryAddFromInput(raw)){
+      lastManualAdded = raw;
+      manualQR.value = '';
     }
+  }, 0);
+});
+
+manualQR.addEventListener('keydown', (e)=>{
+  if(e.key === 'Enter'){
+    e.preventDefault();
+    const raw = manualQR.value.trim();
+    if(!raw) return;
+    if(raw === lastManualAdded) return;
+    if(tryAddFromInput(raw)){
+      lastManualAdded = raw;
+      manualQR.value = '';
+    }
+  }
 });
 
 document.getElementById('copyMessage').onclick=()=>{
-    navigator.clipboard.writeText(messageBox.value);
-    alert('Message copied');
+  navigator.clipboard.writeText(messageBox.value);
+  showToast('✅ Message copied');
 };
+
+updateSpecialFields();
+refreshMessageBox();
 </script>
 </body>
 </html>
