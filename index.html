@@ -253,7 +253,8 @@ button:disabled{ background:#555; cursor:not-allowed; box-shadow:none; border:no
         <div class="sub">Created by M.Orgulan</div>
       </div>
     </div>
-    <div class="pill">Version 7.1.26</div>
+    <!-- ✅ promijenjena verzija -->
+    <div class="pill">Version 19.1.26</div>
   </div>
 
   <div class="card">
@@ -331,7 +332,7 @@ button:disabled{ background:#555; cursor:not-allowed; box-shadow:none; border:no
 
 <div id="toast" class="toast" role="status" aria-live="polite">✅ Message copied</div>
 
-<!-- ✅ PINNED html5-qrcode (nemoj "latest" preko unpkg) -->
+<!-- ✅ PINNED html5-qrcode -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
 
 <script>
@@ -348,6 +349,9 @@ let codeEntries = [];
 let scanning = false;
 let lastManualAdded = "";
 
+// throttling za toast kad decode radi ali fale polja
+let lastWarnAt = 0;
+
 function showToast(text){
   const t = document.getElementById('toast');
   t.textContent = text;
@@ -356,7 +360,7 @@ function showToast(text){
   window.__toastTimer = setTimeout(()=>t.classList.remove('show'), 1400);
 }
 
-// OSTAVLJENO kako si imao (42 znaka iz code= parametra)
+// 42 hex iz code= parametra (ako ne matcha, vrati cijeli payload)
 function extractCode(url){
   let match = url.match(/code=([A-Fa-f0-9]{42})/);
   return match ? match[1] : url;
@@ -375,7 +379,6 @@ function getPurposes(){
 function updateSpecialFields(){
   const purposes = getPurposes();
 
-  // spremi stare vrijednosti da se ne gube kad klikneš checkbox
   const oldVersionVal = document.getElementById('oldVersion')?.value || "";
   const newVersionVal = document.getElementById('newVersion')?.value || "";
   const oldExVal = document.getElementById('oldEx')?.value || "";
@@ -406,7 +409,6 @@ function buildPurposesString(){
   const purposes = getPurposes();
   let base = purposes.join(' + ');
 
-  // (opcionalno) uključi special info u Purpose line
   const extras = [];
   if(purposes.includes('Conversion') || purposes.includes('Card replacement')){
     const ov = document.getElementById('oldVersion')?.value?.trim() || "";
@@ -423,15 +425,15 @@ function buildPurposesString(){
   return base;
 }
 
-function addEntry(serial, codeType, purposes, qr){
-  let entry = {serial, codeType, purposes, qr};
+function addEntry(serial, codeType, purposes, payload){
+  let entry = {serial, codeType, purposes, qr: payload};
   codeEntries.push(entry);
 
   let div = document.createElement('div');
   div.className='code-item';
   div.innerHTML = `<div class="code-details">
       <strong>SN:</strong> ${serial} &nbsp;|&nbsp; <strong>${codeType}</strong> &nbsp;|&nbsp; <strong>${purposes}</strong>
-      <div class="code-qr">${qr}</div>
+      <div class="code-qr">${payload}</div>
     </div>
     <span class="code-remove" title="Remove">✕</span>`;
 
@@ -452,21 +454,35 @@ function refreshMessageBox(){
   });
 }
 
-function tryAddFromInput(raw){
-  // ukloni whitespace/newlines koji znaju zezat QR payload
-  const cleaned = (raw || "").trim().replace(/\s+/g, "");
-  let qr = extractCode(cleaned);
+function tryAddFromInput(raw, {silent=false} = {}){
+  const cleaned = (raw || "").trim();
+  const payload = extractCode(cleaned);
 
-  let serial = serialInput.value.trim();
-  let codeType = document.querySelector('input[name="codeType"]:checked')?.value;
-  let purposes = buildPurposesString();
+  const serial = serialInput.value.trim();
+  const codeType = document.querySelector('input[name="codeType"]:checked')?.value;
+  const purposesArr = getPurposes();
+  const purposes = buildPurposesString();
 
-  if(serial && codeType && purposes && qr){
-    addEntry(serial, codeType, purposes, qr);
-    safeBeep();
-    return true;
+  if(!serial){
+    if(!silent) showToast("❌ Upisi serijski broj (SN) prije skeniranja");
+    return { ok:false, reason:"serial" };
   }
-  return false;
+  if(!codeType){
+    if(!silent) showToast("❌ Odaberi vrstu koda (Hybrid/Regular)");
+    return { ok:false, reason:"codeType" };
+  }
+  if(!purposesArr.length){
+    if(!silent) showToast("❌ Odaberi barem jednu namjenu (Purpose)");
+    return { ok:false, reason:"purpose" };
+  }
+  if(!payload){
+    if(!silent) showToast("❌ Kod je prazan / nečitljiv");
+    return { ok:false, reason:"payload" };
+  }
+
+  addEntry(serial, codeType, purposes, payload);
+  safeBeep();
+  return { ok:true };
 }
 
 async function stopScanner(){
@@ -489,23 +505,49 @@ scanQRBtn.addEventListener('click', async ()=>{
 
   scanning = true;
 
+  // ✅ uključi više formata (QR + “gušće” kodove tipa DataMatrix/PDF417/Aztec)
+  const formatsToSupport = [
+    Html5QrcodeSupportedFormats.QR_CODE,
+    Html5QrcodeSupportedFormats.DATA_MATRIX,
+    Html5QrcodeSupportedFormats.AZTEC,
+    Html5QrcodeSupportedFormats.PDF_417,
+    Html5QrcodeSupportedFormats.CODE_128,
+    Html5QrcodeSupportedFormats.CODE_39,
+    Html5QrcodeSupportedFormats.EAN_13,
+    Html5QrcodeSupportedFormats.EAN_8
+  ];
+
   const config = {
     fps: 10,
-    // ✅ na nekim browserima je stabilnije kao objekt (ne broj)
-    qrbox: { width: 250, height: 250 },
-    // ponekad pomogne kad je camera feed "mirrored" / čudno renderiran
-    disableFlip: false
+    // veći okvir pomaže za gušće kodove
+    qrbox: { width: 320, height: 320 },
+    aspectRatio: 1.777,
+    // na nekim Androidima pomaže za “ne hvata ništa”
+    disableFlip: true,
+    formatsToSupport,
+    experimentalFeatures: {
+      // ako browser podržava BarcodeDetector, često bolje hvata DataMatrix/PDF417
+      useBarCodeDetectorIfSupported: true
+    }
   };
 
   const onScanSuccess = async (decodedText) => {
-    const ok = tryAddFromInput(decodedText);
-    if(ok) await stopScanner();
+    const res = tryAddFromInput(decodedText, { silent:true });
+
+    if(res.ok){
+      await stopScanner();
+      return;
+    }
+
+    const now = Date.now();
+    if(now - lastWarnAt > 1200){
+      lastWarnAt = now;
+      tryAddFromInput(decodedText, { silent:false });
+    }
   };
 
   const onScanFailure = (_errorMessage) => {
-    // Namjerno ne radimo toast da ne spamma (ovo se zove stalno dok ne uhvati QR)
-    // Ako želiš debug:
-    // console.log("scan fail:", _errorMessage);
+    // ne toastamo - ovo ide stalno dok ne uhvati kod
   };
 
   try{
@@ -530,7 +572,9 @@ manualQR.addEventListener('paste', ()=>{
     const raw = manualQR.value.trim();
     if(!raw) return;
     if(raw === lastManualAdded) return;
-    if(tryAddFromInput(raw)){
+
+    const res = tryAddFromInput(raw, { silent:false });
+    if(res.ok){
       lastManualAdded = raw;
       manualQR.value = '';
     }
@@ -543,7 +587,9 @@ manualQR.addEventListener('keydown', (e)=>{
     const raw = manualQR.value.trim();
     if(!raw) return;
     if(raw === lastManualAdded) return;
-    if(tryAddFromInput(raw)){
+
+    const res = tryAddFromInput(raw, { silent:false });
+    if(res.ok){
       lastManualAdded = raw;
       manualQR.value = '';
     }
