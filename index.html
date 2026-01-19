@@ -331,7 +331,9 @@ button:disabled{ background:#555; cursor:not-allowed; box-shadow:none; border:no
 
 <div id="toast" class="toast" role="status" aria-live="polite">✅ Message copied</div>
 
-<script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+<!-- ✅ PINNED html5-qrcode (nemoj "latest" preko unpkg) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+
 <script>
 let messageBox = document.getElementById('messageBox');
 let serialInput = document.getElementById('serialNumber');
@@ -451,12 +453,14 @@ function refreshMessageBox(){
 }
 
 function tryAddFromInput(raw){
-  let qr = extractCode((raw || "").trim());
+  // ukloni whitespace/newlines koji znaju zezat QR payload
+  const cleaned = (raw || "").trim().replace(/\s+/g, "");
+  let qr = extractCode(cleaned);
+
   let serial = serialInput.value.trim();
   let codeType = document.querySelector('input[name="codeType"]:checked')?.value;
   let purposes = buildPurposesString();
 
-  // Ako je skeniran URL i extract fail-a, qr će biti cijeli URL -> to ti je OK kako si imao.
   if(serial && codeType && purposes && qr){
     addEntry(serial, codeType, purposes, qr);
     safeBeep();
@@ -471,28 +475,52 @@ async function stopScanner(){
     try { await html5QrcodeScanner.clear(); } catch(e) {}
   }
   scanning = false;
+  scanQRBtn.disabled = false;
   qrReaderDiv.style.display='none';
 }
 
 scanQRBtn.addEventListener('click', async ()=>{
   if(scanning) return;
+
   qrReaderDiv.style.display='block';
+  scanQRBtn.disabled = true;
+
   if(!html5QrcodeScanner) html5QrcodeScanner = new Html5Qrcode("qr-reader");
 
   scanning = true;
+
+  const config = {
+    fps: 10,
+    // ✅ na nekim browserima je stabilnije kao objekt (ne broj)
+    qrbox: { width: 250, height: 250 },
+    // ponekad pomogne kad je camera feed "mirrored" / čudno renderiran
+    disableFlip: false
+  };
+
+  const onScanSuccess = async (decodedText) => {
+    const ok = tryAddFromInput(decodedText);
+    if(ok) await stopScanner();
+  };
+
+  const onScanFailure = (_errorMessage) => {
+    // Namjerno ne radimo toast da ne spamma (ovo se zove stalno dok ne uhvati QR)
+    // Ako želiš debug:
+    // console.log("scan fail:", _errorMessage);
+  };
+
   try{
     await html5QrcodeScanner.start(
       { facingMode:"environment" },
-      { fps:10, qrbox:250 },
-      async decoded=>{
-        const ok = tryAddFromInput(decoded);
-        if(ok) await stopScanner();
-      }
+      config,
+      onScanSuccess,
+      onScanFailure
     );
   }catch(err){
     scanning = false;
+    scanQRBtn.disabled = false;
     qrReaderDiv.style.display='none';
     showToast("❌ Camera not available");
+    console.error(err);
   }
 });
 
